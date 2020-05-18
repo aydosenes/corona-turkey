@@ -16,5 +16,8 @@ namespace CoronaTurkey
         [LoadColumn(2)]
         public float DailyTestCounts;
 
+        [LoadColumn(3)]
+        public float DailyDeaths;
+
     }
 }

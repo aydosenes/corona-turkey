@@ -26,9 +26,9 @@ namespace CoronaTurkey
         {
             IDataView dataView = mlContext.Data.LoadFromTextFile<Corona>(dataPath, hasHeader: true, separatorChar: ',');
 
-            var pipeline = mlContext.Transforms.CopyColumns(outputColumnName: "Label", inputColumnName: "DailyCases")
+            var pipeline = mlContext.Transforms.CopyColumns(outputColumnName: "Label", inputColumnName: "DailyDeaths")
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding(outputColumnName: "DateEncoded", inputColumnName: "Date"))
-                .Append(mlContext.Transforms.Concatenate("Features", "DateEncoded", "DailyCases", "DailyTestCounts"))
+                .Append(mlContext.Transforms.Concatenate("Features", "DateEncoded", "DailyCases", "DailyTestCounts", "DailyDeaths"))
                 .Append(mlContext.Regression.Trainers.FastTree());
 
             var model = pipeline.Fit(dataView);
@@ -53,20 +53,35 @@ namespace CoronaTurkey
 
         private static void TestSinglePrediction(MLContext mlContext, ITransformer model)
         {
-            var predictionFunction = mlContext.Model.CreatePredictionEngine<Corona, DailyCasePrediction>(model);
+            var predictionFunction = mlContext.Model.CreatePredictionEngine<Corona, DeathPrediction>(model);
+
+            Console.WriteLine("Enter Amount of Cases For Today : ");
+            int caseAmount = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+
+            Console.WriteLine("Enter Amount of Tests For Today : ");
+            var testAmount = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+
+            Console.WriteLine("Enter Actual Amount of Deaths For Today : ");
+            var actualNumber = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+
 
             var coronaCaseSample = new Corona()
             {
                 Date="Day 69",
-                DailyCases=0,
-                DailyTestCounts=36000
+                DailyCases= caseAmount,
+                DailyTestCounts= testAmount,
+                DailyDeaths = 0
             };
 
             var prediction = predictionFunction.Predict(coronaCaseSample);
 
+            Console.WriteLine($"==========> Case Amount: {coronaCaseSample.DailyCases}");
             Console.WriteLine($"==========> Test Amount: {coronaCaseSample.DailyTestCounts}");
-            Console.WriteLine($"==========> Actual Case Amount: Unknown Yet");
-            Console.WriteLine($"==========> Predicted Case Amount: {prediction.DailyCases:0.####}");
+            Console.WriteLine($"==========> Actual Death Amount: {actualNumber}");
+            Console.WriteLine($"==========> Predicted Death Amount: {prediction.DailyDeaths:0.####}");
             Console.ReadLine();
         }
     }
