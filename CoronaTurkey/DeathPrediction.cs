@@ -8,7 +8,7 @@ namespace CoronaTurkey
     public class DeathPrediction
     {
         [ColumnName("Score")]
-        public float DailyDeaths;
+        public float DailyDeathCounts;
 
     }
 }
