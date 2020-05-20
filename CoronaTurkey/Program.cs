@@ -3,43 +3,35 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace CoronaTurkey
 {
     class Program
     {
-        static readonly string _trainDataPath = @"C:\Users\aydos\Desktop\repositories\Datasets\CoronaTurkey\covid_train.csv";
-        static readonly string _testDataPath = @"C:\Users\aydos\Desktop\repositories\Datasets\CoronaTurkey\covid_test.csv";
+        //static readonly string dataPath = @"C:\Users\aydos\Desktop\repositories\Datasets\Covid19-Turkey.csv";
+        static string basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        static string dataPath = Path.Combine(basePath, "Covid19-Turkey.csv");
 
         static void Main(string[] args)
         {
             MLContext mlContext = new MLContext(seed: 0);
 
-            var model = Train(mlContext, _trainDataPath);
-
-            Evaluate(mlContext, model);
-
-            TestSinglePrediction(mlContext, model);
-        }
-
-        public static ITransformer Train(MLContext mlContext, string dataPath)
-        {
             IDataView dataView = mlContext.Data.LoadFromTextFile<Corona>(dataPath, hasHeader: true, separatorChar: ',');
+            DataOperationsCatalog.TrainTestData dataSplit = mlContext.Data.TrainTestSplit(dataView, testFraction: 0.2);
+            IDataView trainData = dataSplit.TrainSet;
+            IDataView testData = dataSplit.TestSet;
 
-            var pipeline = mlContext.Transforms.CopyColumns(outputColumnName: "Label", inputColumnName: "DailyDeathCounts")
-                .Append(mlContext.Transforms.Categorical.OneHotEncoding(outputColumnName: "DayEncoded", inputColumnName: "Day"))
-                .Append(mlContext.Transforms.Concatenate("Features", "DayEncoded", "DailyCaseCounts", "DailyTestCounts", "DailyDeathCounts"))
+            var pipeline = mlContext.Transforms.CopyColumns(outputColumnName: "Label", inputColumnName: "DailyCases")
+                .Append(mlContext.Transforms.Categorical.OneHotEncoding(outputColumnName: "DateEncoded", inputColumnName: "Date"))
+                .Append(mlContext.Transforms.Concatenate("Features", "DateEncoded", "TotalCases", "TotalDeaths", "TotalRecovered", "ActiveCases", 
+                        "DailyTestCases", "TotalIntensiveCare", "IntubatedCases", "CaseIncreaseRate", "DailyCaseTestRate", "RecoveredActiveCaseRate", 
+                        "DeathActiveCaseRate", "ActiveCasePopulationRate"))
                 .Append(mlContext.Regression.Trainers.FastTree());
 
-            var model = pipeline.Fit(dataView);
+            var model = pipeline.Fit(trainData);
 
-            return model;
-        }
-
-        private static void Evaluate(MLContext mlContext, ITransformer model)
-        {
-            IDataView dataView = mlContext.Data.LoadFromTextFile<Corona>(_testDataPath, hasHeader: true, separatorChar: ',');
-            var predictions = model.Transform(dataView);
+            var predictions = model.Transform(testData);
             var metrics = mlContext.Regression.Evaluate(predictions, "Label", "Score");
 
             Console.WriteLine();
@@ -49,41 +41,49 @@ namespace CoronaTurkey
             Console.WriteLine();
             Console.WriteLine("Press Enter to Get Results...");
             Console.ReadLine();
-        }
 
-        private static void TestSinglePrediction(MLContext mlContext, ITransformer model)
-        {
-            var predictionFunction = mlContext.Model.CreatePredictionEngine<Corona, DeathPrediction>(model);
+            var predictionFunction = mlContext.Model.CreatePredictionEngine<Corona, CasePrediction>(model);
 
-            Console.WriteLine("Case Counts For Today : ");
-            int caseCount = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine("Date : ");
+            var date = Convert.ToInt32(Console.ReadLine()).ToString();
             Console.WriteLine();
 
             Console.WriteLine("Test Counts For Today : ");
             var testCount = Convert.ToInt32(Console.ReadLine());
             Console.WriteLine();
 
-            Console.WriteLine("Actual Death Counts For Today : ");
+            Console.WriteLine("Actual Case Counts For Today : ");
             var actualNumber = Convert.ToInt32(Console.ReadLine());
             Console.WriteLine();
 
 
             var coronaCaseSample = new Corona()
             {
-                Day="Day 69",
-                DailyCaseCounts= caseCount,
-                DailyTestCounts= testCount,
-                DailyDeathCounts = 0
+                Date = date,
+                DailyCases = 0,
+                TotalCases = 151615,
+                TotalDeaths = 4199,
+                TotalRecovered = 112895,
+                ActiveCases = 34521,
+                DailyTestCases = testCount,
+                TotalIntensiveCare = 882,
+                IntubatedCases = 455,
+                CaseIncreaseRate = 0.68f,
+                DailyCaseTestRate = 4.03f,
+                RecoveredActiveCaseRate = 327.04f,
+                DeathActiveCaseRate = 12.17f,
+                ActiveCasePopulationRate = 0.04102837f
             };
 
             var prediction = predictionFunction.Predict(coronaCaseSample);
 
-            Console.WriteLine($"==========> Case Amount: {coronaCaseSample.DailyCaseCounts}");
-            Console.WriteLine($"==========> Test Amount: {coronaCaseSample.DailyTestCounts}");
-            Console.WriteLine($"==========> Actual Death Amount: {actualNumber}");
-            Console.WriteLine($"==========> Predicted Death Amount: {prediction.DailyDeathCounts:0.####}");
+            Console.WriteLine($"==========> Test Amount: {coronaCaseSample.TotalCases}");
+            Console.WriteLine($"==========> Actual Case Amount: {actualNumber}");
+            Console.WriteLine($"==========> Predicted Case Amount: {prediction.DailyCases:0.####}");
             Console.ReadLine();
+
         }
+
     }
 }
 

@@ -5,10 +5,10 @@ using System.Text;
 
 namespace CoronaTurkey
 {
-    public class DeathPrediction
+    public class CasePrediction
     {
         [ColumnName("Score")]
-        public float DailyDeathCounts;
+        public float DailyCases;
 
     }
 }
