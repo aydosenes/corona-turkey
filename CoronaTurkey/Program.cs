@@ -18,7 +18,7 @@ namespace CoronaTurkey
             MLContext mlContext = new MLContext(seed: 0);
 
             IDataView dataView = mlContext.Data.LoadFromTextFile<Corona>(dataPath, hasHeader: true, separatorChar: ',');
-            DataOperationsCatalog.TrainTestData dataSplit = mlContext.Data.TrainTestSplit(dataView, testFraction: 0.2);
+            DataOperationsCatalog.TrainTestData dataSplit = mlContext.Data.TrainTestSplit(dataView, testFraction: 0.1);
             IDataView trainData = dataSplit.TrainSet;
             IDataView testData = dataSplit.TestSet;
 
@@ -44,7 +44,7 @@ namespace CoronaTurkey
 
             var predictionFunction = mlContext.Model.CreatePredictionEngine<Corona, CasePrediction>(model);
 
-            Console.WriteLine("Date : ");
+            Console.WriteLine("Date Number : ");
             var date = Convert.ToInt32(Console.ReadLine()).ToString();
             Console.WriteLine();
 
