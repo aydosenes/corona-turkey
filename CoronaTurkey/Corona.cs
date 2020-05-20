@@ -14,19 +14,13 @@ namespace CoronaTurkey
         public float DailyCases;
 
         [LoadColumn(2)]
-        public float TotalDeaths;
+        public float DailyDeaths;
 
         [LoadColumn(3)]
-        public float TotalRecovered;
-
-        [LoadColumn(4)]
-        public float ActiveCases;
-
-        [LoadColumn(5)]
         public float DailyTestCases;
 
-        [LoadColumn(6)]
-        public float CaseIncreaseRate;
+        [LoadColumn(4)]
+        public float TotalDeaths;
 
     }
 }

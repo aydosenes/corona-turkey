@@ -24,8 +24,7 @@ namespace CoronaTurkey
 
             var pipeline = mlContext.Transforms.CopyColumns(outputColumnName: "Label", inputColumnName: "DailyCases")
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding(outputColumnName: "DateEncoded", inputColumnName: "Date"))
-                .Append(mlContext.Transforms.Concatenate("Features", "DateEncoded", "TotalDeaths", "TotalRecovered", "ActiveCases", 
-                        "DailyTestCases", "CaseIncreaseRate"))
+                .Append(mlContext.Transforms.Concatenate("Features", "DateEncoded", "DailyDeaths","DailyTestCases", "TotalDeaths"))
                 .Append(mlContext.Regression.Trainers.FastTree());
 
             var model = pipeline.Fit(trainData);
@@ -48,12 +47,16 @@ namespace CoronaTurkey
             Console.WriteLine("Date : ");
             var date = Convert.ToDateTime(Console.ReadLine()).ToString();
             Console.WriteLine();
-
-            Console.WriteLine("Test Counts For Today : ");
+            Console.WriteLine("How many people died today? : ");
+            var dailyDeaths = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+            Console.WriteLine("How many tests applied today? : ");
             var testCount = Convert.ToInt32(Console.ReadLine());
             Console.WriteLine();
-
-            Console.WriteLine("Actual Case Counts For Today : ");
+            Console.WriteLine("How many people died at total? : ");
+            var totalDeaths = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+            Console.WriteLine("The number trying to be predicted : ");
             var actualNumber = Convert.ToInt32(Console.ReadLine());
             Console.WriteLine();
 
@@ -62,11 +65,10 @@ namespace CoronaTurkey
             {
                 Date = date,
                 DailyCases = 0,
-                TotalDeaths = 4199,
-                TotalRecovered = 112895,
-                ActiveCases = 34521,
+                DailyDeaths = dailyDeaths,
                 DailyTestCases = testCount,
-                CaseIncreaseRate = 0.68f
+                TotalDeaths = totalDeaths,
+
             };
 
             var prediction = predictionFunction.Predict(coronaCaseSample);
