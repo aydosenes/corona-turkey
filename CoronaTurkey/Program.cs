@@ -45,7 +45,7 @@ namespace CoronaTurkey
 
             var predictionFunction = mlContext.Model.CreatePredictionEngine<Corona, CasePrediction>(model);
 
-            Console.WriteLine("Date Number : ");
+            Console.WriteLine("Date : ");
             var date = Convert.ToDateTime(Console.ReadLine()).ToString();
             Console.WriteLine();
 
