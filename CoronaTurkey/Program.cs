@@ -24,9 +24,8 @@ namespace CoronaTurkey
 
             var pipeline = mlContext.Transforms.CopyColumns(outputColumnName: "Label", inputColumnName: "DailyCases")
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding(outputColumnName: "DateEncoded", inputColumnName: "Date"))
-                .Append(mlContext.Transforms.Concatenate("Features", "DateEncoded", "TotalCases", "TotalDeaths", "TotalRecovered", "ActiveCases", 
-                        "DailyTestCases", "TotalIntensiveCare", "IntubatedCases", "CaseIncreaseRate", "DailyCaseTestRate", "RecoveredActiveCaseRate", 
-                        "DeathActiveCaseRate", "ActiveCasePopulationRate"))
+                .Append(mlContext.Transforms.Concatenate("Features", "DateEncoded", "TotalDeaths", "TotalRecovered", "ActiveCases", 
+                        "DailyTestCases", "CaseIncreaseRate"))
                 .Append(mlContext.Regression.Trainers.FastTree());
 
             var model = pipeline.Fit(trainData);
@@ -34,6 +33,8 @@ namespace CoronaTurkey
             var predictions = model.Transform(testData);
             var metrics = mlContext.Regression.Evaluate(predictions, "Label", "Score");
 
+            Console.WriteLine();
+            Console.WriteLine("********************| CORONAVIRUS IN TURKEY |********************");
             Console.WriteLine();
             Console.WriteLine($"Output : ");
             Console.WriteLine($"==========> R-Squared Score:{metrics.RSquared: %.###} ");
@@ -45,7 +46,7 @@ namespace CoronaTurkey
             var predictionFunction = mlContext.Model.CreatePredictionEngine<Corona, CasePrediction>(model);
 
             Console.WriteLine("Date Number : ");
-            var date = Convert.ToInt32(Console.ReadLine()).ToString();
+            var date = Convert.ToDateTime(Console.ReadLine()).ToString();
             Console.WriteLine();
 
             Console.WriteLine("Test Counts For Today : ");
@@ -61,23 +62,16 @@ namespace CoronaTurkey
             {
                 Date = date,
                 DailyCases = 0,
-                TotalCases = 151615,
                 TotalDeaths = 4199,
                 TotalRecovered = 112895,
                 ActiveCases = 34521,
                 DailyTestCases = testCount,
-                TotalIntensiveCare = 882,
-                IntubatedCases = 455,
-                CaseIncreaseRate = 0.68f,
-                DailyCaseTestRate = 4.03f,
-                RecoveredActiveCaseRate = 327.04f,
-                DeathActiveCaseRate = 12.17f,
-                ActiveCasePopulationRate = 0.04102837f
+                CaseIncreaseRate = 0.68f
             };
 
             var prediction = predictionFunction.Predict(coronaCaseSample);
 
-            Console.WriteLine($"==========> Test Amount: {coronaCaseSample.TotalCases}");
+            Console.WriteLine($"==========> Test Amount: {coronaCaseSample.DailyTestCases}");
             Console.WriteLine($"==========> Actual Case Amount: {actualNumber}");
             Console.WriteLine($"==========> Predicted Case Amount: {prediction.DailyCases:0.####}");
             Console.ReadLine();
